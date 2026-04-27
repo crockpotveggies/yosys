@@ -1,0 +1,10 @@
+read_verilog wide_opt_chain_8000.v
+hierarchy -top top
+proc
+opt
+wreduce
+alumacc
+opt
+techmap
+opt
+stat

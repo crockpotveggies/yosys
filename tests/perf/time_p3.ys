@@ -1,0 +1,5 @@
+read_verilog many_equiv_cells_60000.v
+hierarchy -top top
+proc
+opt_expr
+opt_merge

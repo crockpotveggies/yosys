@@ -1,0 +1,3 @@
+read_verilog many_equiv_cells_60000.v
+hierarchy -top top
+proc

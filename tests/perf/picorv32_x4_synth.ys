@@ -1,0 +1,17 @@
+read_verilog ../../tests/functional/picorv32.v picorv32_x4.v
+hierarchy -top picorv32_x4
+flatten
+proc
+opt
+wreduce
+alumacc
+share
+opt
+fsm
+opt
+memory -nomap
+opt -fast
+techmap
+opt -full
+clean
+stat

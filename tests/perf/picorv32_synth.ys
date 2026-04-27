@@ -1,0 +1,13 @@
+read_verilog ../../tests/functional/picorv32.v
+hierarchy -top picorv32
+proc
+opt_expr
+opt_clean
+opt -fast
+wreduce
+alumacc
+opt -fast
+memory -nomap
+opt_clean
+opt -fast
+stat

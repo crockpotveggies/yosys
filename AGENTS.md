@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, Cursor, Aider, etc.) working in this
 
 ## What this repo is
 
-[YosysHQ/yosys](https://github.com/YosysHQ/yosys) — an open-source RTL synthesis framework — forked at `crockpotveggies/yosys`. Active branch: `crockpot/optimization-v1`, focused on performance optimization (~1.85× geomean over upstream `main` across the four benchmarks in `benchmark-results/generated/`).
+[YosysHQ/yosys](https://github.com/YosysHQ/yosys) — an open-source RTL synthesis framework — forked at `crockpotveggies/yosys`. Active branch: `crockpot/optimization-v1`, focused on performance optimization (~1.85× geomean over upstream `main` across the four benchmarks in `tests/perf/`).
 
 ## Build
 
@@ -18,8 +18,8 @@ make -j6 yosys.exe
 **Caveat for this Windows config:** the standard link step fails with `cannot find techlibs/quickl: No such file or directory` because the command line for 330 .o files exceeds Windows' limit. After `make -j6` reports that error, finish the link via response file:
 
 ```bash
-bash benchmark-results/gen_objs.sh   # regenerate yosys_objs.txt with current GIT_REV
-bash benchmark-results/link_yosys.sh # link via mingw response file
+bash tests/perf/gen_objs.sh   # regenerate yosys_objs.txt with current GIT_REV
+bash tests/perf/link_yosys.sh # link via mingw response file
 ```
 
 **After any change to `RTLIL::Module` layout** (adding/removing fields), force-clean stale .o files first — the `.d` dependency files in `passes/opt/opt_clean/` and `libs/*` don't track `kernel/rtlil.h`, so stale .o files cause silent ABI mismatch and SEGVs in unrelated passes:
@@ -65,7 +65,8 @@ backends/      Output writers (verilog, blif, json, smt2, ...)
 techlibs/      Tech-mapping libraries per FPGA family (xilinx, ice40, ecp5, ...)
 libs/          Vendored deps (bigint, ezsat, json11, minisat, sha1)
 tests/         Test suites — see "Test" above
-benchmark-results/  Perf-loop scripts, synthetic benchmarks, historical numbers
+tests/perf/    Perf-loop benchmark sources, scripts, and historical summaries
+benchmark-results/  Per-run JSON results + microbench .exe (gitignored, scratch)
 agents/        Specialized agent playbooks (see below)
 ```
 
@@ -88,10 +89,10 @@ agents/        Specialized agent playbooks (see below)
 ./yosys.exe path/to/script.ys
 
 # Time a benchmark
-{ time ./yosys.exe -q benchmark-results/generated/picorv32_x4_synth.ys; } 2>&1 | grep real
+{ time ./yosys.exe -q tests/perf/picorv32_x4_synth.ys; } 2>&1 | grep real
 
 # Quick bench across generated synthetic + picorv32 cases
-bash benchmark-results/run_loop.sh <label>
+bash tests/perf/run_loop.sh <label>
 ```
 
 ## Working with multiple agents
@@ -104,8 +105,8 @@ When adding a new agent playbook, add a one-line entry to the list above and put
 
 ## Useful repo-specific docs
 
-- `benchmark-results/PERF-WORK-SUMMARY.md` — cumulative log of optimization work (what landed, what didn't, why). Read before proposing a perf change to avoid retreading rejected ideas.
-- `benchmark-results/SUMMARY-2026-04-24.md` — hashlib loops 6-10 detailed numbers.
+- `tests/perf/PERF-WORK-SUMMARY.md` — cumulative log of optimization work (what landed, what didn't, why). Read before proposing a perf change to avoid retreading rejected ideas.
+- `tests/perf/SUMMARY-2026-04-24.md` — hashlib loops 6-10 detailed numbers.
 - `agents/perf-bisect.md` — perf-loop playbook (see above).
 - `README.md`, `CodingReadme` — upstream yosys docs (start here for the data model).
 

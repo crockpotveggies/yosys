@@ -1,0 +1,16 @@
+read_verilog many_equiv_cells_60000.v
+hierarchy -top top
+proc
+tee -q -o /tmp/t1.txt scratchpad -copy now t1
+opt_expr
+tee -q -o /tmp/t2.txt scratchpad -copy now t2
+opt_merge
+tee -q -o /tmp/t3.txt scratchpad -copy now t3
+opt_clean
+tee -q -o /tmp/t4.txt scratchpad -copy now t4
+opt_reduce
+tee -q -o /tmp/t5.txt scratchpad -copy now t5
+opt_merge
+tee -q -o /tmp/t6.txt scratchpad -copy now t6
+opt_clean
+tee -q -o /tmp/t7.txt scratchpad -copy now t7

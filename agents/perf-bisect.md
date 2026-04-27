@@ -2,7 +2,7 @@
 
 Playbook for running performance optimization work on this repo. This is the discipline that produced ~1.85× geomean speedup over upstream `main` across mec30k, mec60k, woc3k, and picorv32_x4.
 
-For repo-level orientation (build, test, layout) see [`AGENTS.md`](../AGENTS.md). For the cumulative log of what's already been tried see [`benchmark-results/PERF-WORK-SUMMARY.md`](../benchmark-results/PERF-WORK-SUMMARY.md).
+For repo-level orientation (build, test, layout) see [`AGENTS.md`](../AGENTS.md). For the cumulative log of what's already been tried see [`tests/perf/PERF-WORK-SUMMARY.md`](../tests/perf/PERF-WORK-SUMMARY.md).
 
 ## When to use this agent
 
@@ -23,7 +23,7 @@ A perf loop = one self-contained hypothesis, validated end-to-end before commit.
 2. HYPOTHESIZE — state in one sentence what you'll change and what speedup you expect.
 3. EDIT — make ONE focused change. No bundled refactors. No drive-by cleanups.
 4. BUILD — see "Build" in AGENTS.md. Standard `make yosys.exe` link will fail; use the response-file workflow.
-5. BENCH — run the relevant subset of `benchmark-results/generated/*.ys` 5x. Take medians. Compare against pre-change baseline numbers.
+5. BENCH — run the relevant subset of `tests/perf/*.ys` 5x. Take medians. Compare against pre-change baseline numbers.
 6. TEST — at minimum, run the canary tests: `tests/various/{wreduce,wreduce2,peepopt,muxpack}.ys`. For changes touching opt passes also run `tests/opt`. For AST/genrtlil changes also run `tests/verilog`.
 7. DECIDE — if real speedup AND tests pass → commit. If regression OR test failure → revert and write down why.
 8. RECORD — append outcome (positive or negative) to the perf-loop history memory file.
@@ -34,14 +34,16 @@ A perf loop = one self-contained hypothesis, validated end-to-end before commit.
 See [`AGENTS.md`](../AGENTS.md) for the standard build/test workflow. Perf-specific extras:
 
 ```bash
-# Per-loop quick check — run the affected synthetic 5x
-cd benchmark-results/generated
+# Per-loop quick check — run the affected synthetic 5x.
+# The .ys scripts use bare filenames for read_verilog, so cd into tests/perf/ first.
+cd tests/perf
 for i in 1 2 3 4 5; do
   { time ../../yosys.exe -q many_equiv_cells_60000.ys; } 2>&1 | grep real
 done
+cd ../..
 
 # Full cycle (microbench + synthetic + default benchmarks, one label)
-bash benchmark-results/run_loop.sh <label>
+bash tests/perf/run_loop.sh <label>
 
 # Outputs:
 #   benchmark-results/<label>-baseline-<date>.json
@@ -72,7 +74,7 @@ For passes that loop over modules, prefix output with the module name and counts
 
 ## Anti-patterns (do NOT redo)
 
-These have all been tried. Full reasoning in `benchmark-results/PERF-WORK-SUMMARY.md`.
+These have all been tried. Full reasoning in `tests/perf/PERF-WORK-SUMMARY.md`.
 
 1. **Changing hashtable iteration order** (e.g. Lemire bucket compression). Yosys `opt -fast` has order-fragile fixed-point loops that explode to 600k+ iterations.
 2. **Adding fields to `entry_t`** (e.g. cached `udata_hash`). +4 bytes per entry hurts cache locality more than it saves work.
@@ -113,11 +115,11 @@ Abort and document, don't push through:
 - **Bench delta within run-to-run noise after 5+ samples.**
 - **Implementation requires rewriting the wrong part of the codebase** (e.g. `dict.reserve()` would need a separate codepath for transient vs persistent dicts).
 
-A documented abort is more valuable than a speculative commit. The `benchmark-results/PERF-WORK-SUMMARY.md` "what didn't work" section is what stops the next agent from wasting cycles.
+A documented abort is more valuable than a speculative commit. The `tests/perf/PERF-WORK-SUMMARY.md` "what didn't work" section is what stops the next agent from wasting cycles.
 
 ## Standard playbook for "tackle item N with the 5x loop strategy"
 
-1. Read `benchmark-results/PERF-WORK-SUMMARY.md` and the perf-loop history memory file (if present) to confirm item N hasn't already been tried.
+1. Read `tests/perf/PERF-WORK-SUMMARY.md` and the perf-loop history memory file (if present) to confirm item N hasn't already been tried.
 2. **Loop 1 = profiling/research, NOT a speculative edit.** Confirm the hot spot is where you think it is. If wrong, propose a pivot rather than burning the budget on a known-wrong target.
 3. **Loops 2-4: implement, bench, refine.** ONE change per loop. Don't bundle.
 4. **Loop 5: revert any instrumentation. Run full canary tests. Commit only if real improvement.**
